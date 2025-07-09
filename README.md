@@ -164,6 +164,9 @@ weighted avg       0.91      0.92      0.91     12357
 ![image](https://github.com/user-attachments/assets/3a01f9ed-6709-4309-9689-09d16033fe75)
 
 
+# DATA-SCIENCE-TASKS-4
+# Analyze traffic accident data to identify patterns related to road conditions, weather, and time of day. Visualize accident hotspots and contributing factors.
+
 
 
 
