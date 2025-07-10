@@ -167,6 +167,70 @@ weighted avg       0.91      0.92      0.91     12357
 # DATA-SCIENCE-TASKS-4
 # Analyze traffic accident data to identify patterns related to road conditions, weather, and time of day. Visualize accident hotspots and contributing factors.
 
+from google.colab import files
 
+uploaded = files.upload()
 
+# Assuming the user uploads a single file
+if uploaded:
+    filename = list(uploaded.keys())[0]
+    print(f'User uploaded file "{filename}" with length {len(uploaded[filename])} bytes')
+    try:
+        df = pd.read_csv(filename)
 
+        # Show list of top cities with most accidents
+        if 'City' in df.columns:
+            top_cities = df['City'].value_counts().head(20)
+            print("Top 20 cities by accident count:\n")
+            print(top_cities)
+
+            # Let user choose a city
+            selected_city = input("Enter the city name from the list above: ")
+
+            # Filter accidents from that city
+            city_accidents = df[df['City'].str.lower() == selected_city.lower()]
+
+            # Check if city has any accidents
+            if city_accidents.empty:
+                print(f"No accidents found for city: {selected_city}")
+            else:
+                print(f"\n🔍 Showing one sample accident from {selected_city}:\n")
+                selected = city_accidents.sample(1, random_state=42)
+                display(selected.T)
+
+                # Map selected accident
+                if 'Start_Lat' in selected.columns and 'Start_Lng' in selected.columns and 'Severity' in selected.columns:
+                    lat, lng = selected['Start_Lat'].values[0], selected['Start_Lng'].values[0]
+                    city_map = folium.Map(location=[lat, lng], zoom_start=13)
+                    folium.Marker([lat, lng], tooltip=f"{selected_city} Accident", popup=f"Severity: {selected['Severity'].values[0]}").add_to(city_map)
+                    city_map.save('selected_city_accident_map.html')
+                    display(city_map)
+
+                    # Find nearby accidents
+                    from geopy.distance import geodesic
+
+                    def is_nearby(row, ref_coords, radius_km=5):
+                        return geodesic((row['Start_Lat'], row['Start_Lng']), ref_coords).km <= radius_km
+
+                    reference_point = (lat, lng)
+                    nearby = df[df.apply(lambda row: is_nearby(row, reference_point), axis=1)]
+                    print(f"📍 Found {len(nearby)} accidents within 5 km of this accident in {selected_city}.")
+
+                    # Plot severity comparison
+                    sns.countplot(data=nearby, x='Severity', palette='Set2')
+                    plt.title(f"Severity of Accidents near {selected_city} (within 5 km)")
+                    plt.xlabel("Severity")
+                    plt.ylabel("Count")
+                    plt.grid(True)
+                    plt.show()
+                else:
+                    print("Required columns (Start_Lat, Start_Lng, Severity) not found in the dataframe.")
+        else:
+            print("'City' column not found in the uploaded file.")
+    except Exception as e:
+        print(f"Error reading file or processing data: {e}")
+else:
+    print("No file was uploaded.")
+
+    OUTPUT:
+ /content/Accident_Analysis_Full_With_Single_Accident (1) (1).ipynb   
